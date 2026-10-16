@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html class="h-full" data-kt-theme="true" data-kt-theme-mode="light" lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Mapa - Encuesta Sonora</title>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+<link href="assets/media/app/favicon.ico" rel="shortcut icon">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="assets/vendors/keenicons/styles.bundle.css" rel="stylesheet">
+<link href="assets/css/styles.css" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  @font-face {
+    font-family: 'TitilliumWeb';
+    src: url('TitilliumWeb-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  /* Numeros del proyecto: fuente y tamaño unificados; los totales llevan negritas */
+  .num { font-family: 'TitilliumWeb', sans-serif; font-size: 13px; }
+  .num-total { font-family: 'TitilliumWeb', sans-serif; font-size: 13px; font-weight: 700; }
+  /* Widget de filtros con multi-seleccion: no existe un componente equivalente en Metronic */
+  .filtro { margin-bottom: 10px; position: relative; }
+  .filtro label.filtro-label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--tw-prose-body, #4b5675); }
+  .filtro-lista {
+    display: none; position: absolute; z-index: 1000; background: #fff;
+    border: 1px solid #dbdfe9; border-radius: 6px; max-height: 220px; overflow-y: auto;
+    width: 100%; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.12); margin-top: 2px;
+  }
+  .filtro-lista.abierta { display: block; }
+  .filtro-lista label {
+    display: block; font-size: 12px; font-weight: normal; padding: 6px 10px; margin: 0; cursor: pointer;
+  }
+  .filtro-lista label:hover { background: #f5f8fa; }
+  .filtro-lista input { margin-right: 6px; }
+  .filtro-lista .todos {
+    font-weight: 600; border-bottom: 1px solid #eef1f4; background: #f9fafb;
+  }
+  #contador { font-family: 'TitilliumWeb', sans-serif; font-size: 13px; color: #78829d; }
+  #contador_header, #capa_secc_contador_sel, #tabla_datos_contador_sel { font-family: 'TitilliumWeb', sans-serif; font-size: 13px; }
+
+  /* Columna lateral de filtros contraible: no existe un componente equivalente en Metronic */
+  #filtros_sidebar {
+    width: 300px;
+    min-width: 300px;
+    transition: width .25s ease, min-width .25s ease;
+    overflow: hidden;
+  }
+  #filtros_sidebar.filtros-colapsado {
+    width: 60px;
+    min-width: 60px;
+  }
+  #filtros_sidebar.filtros-colapsado .filtros-titulo,
+  #filtros_sidebar.filtros-colapsado .filtros-cuerpo,
+  #filtros_sidebar.filtros-colapsado .filtros-pie {
+    display: none;
+  }
+  #filtros_toggle_icon { transition: transform .25s ease; }
+  #filtros_sidebar.filtros-colapsado #filtros_toggle_icon { transform: rotate(180deg); }
+  #mapa_area { min-width: 0; }
+  .mapa-fila { min-height: 0; }
+  #filtros { overflow-y: auto; }
+
+  /* HUD de botones tipo "slicer" de Power BI: no existe un componente equivalente en Metronic */
+  .hud-btn {
+    background: #fff; border-color: #dbdfe9; color: #4b5675;
+  }
+  .hud-btn.hud-btn-activo {
+    background: #1b84ff; border-color: #1b84ff; color: #fff;
+  }
+
+  /* Simbologia de la variable coloreada en el mapa (esquina superior derecha), contraible: no existe un componente equivalente en Metronic */
+  #leyenda_color {
+    position: absolute; top: 12px; right: 12px; z-index: 500;
+    background: #fff; border: 1px solid #dbdfe9; border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.18); font-size: 11px; max-width: 220px;
+    overflow: hidden;
+  }
+  .leyenda-color-cabecera {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 8px 10px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  }
+  .leyenda-color-cuerpo {
+    padding: 0 10px 10px 10px; max-height: 220px; overflow-y: auto;
+    transition: max-height .2s ease, padding .2s ease;
+  }
+  #leyenda_color.leyenda-color-colapsada .leyenda-color-cuerpo {
+    max-height: 0; padding-top: 0; padding-bottom: 0; overflow: hidden;
+  }
+  #leyenda_color_toggle_icon { transition: transform .2s ease; }
+  #leyenda_color.leyenda-color-colapsada #leyenda_color_toggle_icon { transform: rotate(180deg); }
+  .leyenda-color-fila { display: flex; align-items: center; gap: 6px; padding: 3px 0; }
+  .leyenda-color-muestra { width: 12px; height: 12px; border-radius: 3px; border: 1px solid rgba(0,0,0,.15); flex-shrink: 0; }
+
+  #map { position: absolute; top: 0; right: 0; bottom: 0; left: 0; width: 100%; height: 100%; }
+  .leaflet-popup-content { font-size: 12px; max-height: 250px; overflow-y: auto; }
+  .leaflet-popup-content table td { vertical-align: top; padding: 1px 4px; }
+  .leaflet-popup-content table td.k { font-weight: bold; white-space: nowrap; }
+  .leaflet-popup-content table td:not(.k) { font-family: 'TitilliumWeb', sans-serif; font-size: 13px; }
+
+  /* Ventanas flotantes de resumen: no existe un componente equivalente en Metronic */
+  .ventana {
+    position: fixed; width: 480px; background: #fff; border: 1px solid #dbdfe9; border-radius: .75rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25); z-index: 2000; font-size: 12px;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .ventana-cabecera {
+    background: #1b84ff; color: #fff; padding: 8px 10px; cursor: move;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .ventana-titulo { font-weight: 600; font-size: 13px; }
+  .ventana-botones button {
+    background: none; border: none; color: #fff; font-size: 13px; cursor: pointer;
+    margin-left: 6px; width: 20px; height: 20px;
+  }
+  .ventana-cuerpo { padding: 12px; overflow: auto; }
+  .ventana.minimizada .ventana-cuerpo { display: none; }
+  .ventana.minimizada { width: 260px; }
+  .resumen-total { font-family: 'TitilliumWeb', sans-serif; font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  .barra-fila { display: flex; align-items: center; margin-bottom: 4px; }
+  .barra-etiqueta { width: 130px; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .barra-visual { height: 14px; flex: 1; background: #f1f1f4; border-radius: 3px; position: relative; }
+  .barra-rellena { height: 100%; border-radius: 3px; }
+  .barra-valor { width: 36px; text-align: right; font-family: 'TitilliumWeb', sans-serif; font-size: 13px; margin-left: 6px; }
+  .tabla-pivote { border-collapse: collapse; margin-top: 8px; width: 100%; }
+  .tabla-pivote th, .tabla-pivote td {
+    border: 1px solid #eef1f4; padding: 3px 6px; font-size: 11px; text-align: center; white-space: nowrap;
+  }
+  .tabla-pivote td:not(.etq) { font-family: 'TitilliumWeb', sans-serif; font-size: 13px; }
+  .tabla-pivote th { background: #f9fafb; }
+  .tabla-pivote td.etq { text-align: left; font-weight: 600; background: #fbfbfb; }
+  .tabla-pivote-wrap { overflow-x: auto; max-height: 220px; overflow-y: auto; }
+
+  /* Panel inferior con tabla de atributos, expandible/contraible: no existe un componente equivalente en Metronic */
+  /* min-width:0 en toda la cadena flex es necesario para que el ancho de la tabla no "empuje"
+     al resto de la pagina (mapa, sidebar, header) y provoque scroll horizontal global; el scroll
+     horizontal debe quedar contenido unicamente dentro de .tabla-datos-scroll */
+  #app_wrapper { min-width: 0; }
+  .kt-wrapper { min-width: 0; }
+  #content { min-width: 0; }
+  #tabla_datos_panel { min-width: 0; }
+  #tabla_datos_toggle_icon { transition: transform .2s ease; }
+  #tabla_datos_toggle_icon.tabla-datos-icono-abierto { transform: rotate(180deg); }
+  #tabla_datos_wrap {
+    min-width: 0; max-height: 0; overflow: hidden; transition: max-height .25s ease;
+  }
+  #tabla_datos_wrap.tabla-datos-abierta {
+    max-height: 320px;
+  }
+  .tabla-datos-scroll { min-width: 0; width: 100%; max-height: 320px; overflow: auto; }
+  #tabla_datos { border-collapse: collapse; font-size: 11px; white-space: nowrap; }
+  #tabla_datos th, #tabla_datos td { border: 1px solid #eef1f4; padding: 3px 6px; text-align: left; }
+  #tabla_datos thead th { background: #f9fafb; position: sticky; top: 0; z-index: 1; }
+  #tabla_datos th.col-ordenable { cursor: pointer; user-select: none; }
+  #tabla_datos th.col-ordenable:hover { background: #eef1f4; }
+  #tabla_datos th.col-orden-asc::after { content: '\25B2'; font-size: 9px; margin-left: 4px; }
+  #tabla_datos th.col-orden-desc::after { content: '\25BC'; font-size: 9px; margin-left: 4px; }
+  #tabla_datos tbody tr { cursor: pointer; }
+  #tabla_datos tbody tr:hover { background: #f5f8fa; }
+  #tabla_datos tbody tr.fila-seleccionada { background: #d6e9ff; }
+  #tabla_datos tbody tr.fila-seleccionada:hover { background: #c3ddff; }
+</style>
+</head>
+<body class="antialiased flex h-full text-base text-foreground bg-background demo1 kt-sidebar-fixed kt-header-fixed">
+<script>
+  document.documentElement.classList.add('light');
+</script>
+
+<div class="flex grow" id="app_wrapper">
+  <!-- Sidebar -->
+  <div class="kt-sidebar bg-background border-e border-e-border fixed top-0 bottom-0 z-20 hidden lg:flex flex-col items-stretch shrink-0 [--kt-drawer-enable:true] lg:[--kt-drawer-enable:false]" data-kt-drawer="true" data-kt-drawer-class="kt-drawer kt-drawer-start top-0 bottom-0" id="sidebar">
+    <div class="kt-sidebar-header hidden lg:flex items-center relative justify-between px-3 lg:px-6 shrink-0" id="sidebar_header">
+      <div class="kt-sidebar-logo min-w-0 flex items-center gap-2">
+        <i class="ki-filled ki-chart-simple text-xl text-primary"></i>
+        <span class="font-semibold text-sm text-mono truncate">Encuesta Sonora</span>
+      </div>
+      <button class="kt-btn kt-btn-outline kt-btn-icon size-[30px] absolute start-full top-2/4 z-40 -translate-x-2/4 -translate-y-2/4" data-kt-toggle="body" data-kt-toggle-class="kt-sidebar-collapse" id="sidebar_toggle">
+        <i class="ki-filled ki-black-left-line kt-toggle-active:rotate-180 transition-all duration-300"></i>
+      </button>
+    </div>
+    <div class="kt-sidebar-content flex grow shrink-0 py-5 pe-2" id="sidebar_content">
+      <div class="kt-scrollable-y-hover grow shrink-0 flex ps-2 lg:ps-5 pe-1 lg:pe-3" data-kt-scrollable="true" data-kt-scrollable-dependencies="#sidebar_header" data-kt-scrollable-height="auto" data-kt-scrollable-offset="0px" data-kt-scrollable-wrappers="#sidebar_content" id="sidebar_scrollable">
+        <div class="kt-menu flex flex-col grow gap-1" data-kt-menu="true" id="sidebar_menu">
+          <div class="kt-menu-item active">
+            <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[10px] ps-[10px] pe-[10px] py-[8px]" href="index.html">
+              <span class="kt-menu-icon items-start text-muted-foreground w-[20px]"><i class="ki-filled ki-map text-lg"></i></span>
+              <span class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold">Mapa interactivo</span>
+            </a>
+          </div>
+          <div class="kt-menu-item">
+            <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[10px] ps-[10px] pe-[10px] py-[8px]" href="dashboard.html">
+              <span class="kt-menu-icon items-start text-muted-foreground w-[20px]"><i class="ki-filled ki-chart-simple text-lg"></i></span>
+              <span class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold">Dashboard KPIs</span>
+            </a>
+          </div>
+          <div class="kt-menu-item">
+            <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[10px] ps-[10px] pe-[10px] py-[8px]" href="resumen.html">
+              <span class="kt-menu-icon items-start text-muted-foreground w-[20px]"><i class="ki-filled ki-book-open text-lg"></i></span>
+              <span class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold">Resumen y hallazgos</span>
+            </a>
+          </div>
+          <div class="kt-menu-item">
+            <a class="kt-menu-link border border-transparent items-center grow hover:bg-accent/60 hover:rounded-lg gap-[10px] ps-[10px] pe-[10px] py-[8px]" href="EncuestaSonora.csv" download="EncuestaSonora.csv">
+              <span class="kt-menu-icon items-start text-muted-foreground w-[20px]"><i class="ki-filled ki-file-down text-lg"></i></span>
+              <span class="kt-menu-title text-sm font-medium text-foreground">Descargar datos (CSV)</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- End of Sidebar -->
+
+  <!-- Wrapper -->
+  <div class="kt-wrapper flex grow flex-col">
+    <!-- Header -->
+    <header class="kt-header fixed top-0 z-10 start-0 end-0 flex items-stretch shrink-0 bg-background" data-kt-sticky="true" data-kt-sticky-class="border-b border-border" data-kt-sticky-name="header" id="header">
+      <div class="kt-container-fixed flex justify-between items-stretch lg:gap-4" id="headerContainer">
+        <div class="flex gap-2.5 lg:hidden items-center -ms-1">
+          <button class="kt-btn kt-btn-icon kt-btn-ghost" data-kt-drawer-toggle="#sidebar">
+            <i class="ki-filled ki-menu"></i>
+          </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <i class="ki-filled ki-map text-lg text-primary"></i>
+          <span class="text-sm font-medium text-mono">Mapa interactivo</span>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <span class="kt-badge kt-badge-outline kt-badge-primary" id="contador_header">0 puntos</span>
+        </div>
+      </div>
+    </header>
+    <!-- End of Header -->
+
+    <!-- Content -->
+    <main class="grow flex flex-col" id="content" role="content" style="height: calc(100vh - var(--header-height));">
+      <div class="kt-container-fixed shrink-0 grow-0 pt-3">
+        <div class="flex flex-wrap items-center gap-2 pb-2" id="hud_distrito">
+          <span class="text-xs font-semibold text-secondary-foreground whitespace-nowrap me-1">Distrito Local</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 pb-3" id="hud_capas">
+          <span class="text-xs font-semibold text-secondary-foreground whitespace-nowrap me-1">Capas</span>
+          <button type="button" class="kt-btn kt-btn-sm kt-btn-outline hud-btn" id="capa_secc_btn">Secciones (resultado de la encuesta)</button>
+          <button type="button" class="kt-btn kt-btn-sm kt-btn-primary" id="capa_secc_resumen_btn" style="display:none;">Generar resumen de secciones</button>
+          <button type="button" class="kt-btn kt-btn-sm kt-btn-outline" id="capa_secc_limpiar_btn" style="display:none;">Quitar selección (<span id="capa_secc_contador_sel">0</span>)</button>
+        </div>
+      </div>
+
+      <div class="flex grow border-t border-border mapa-fila">
+        <!-- Columna lateral de filtros, contraible -->
+        <div class="bg-background border-e border-border flex flex-col shrink-0" id="filtros_sidebar">
+          <div class="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+            <h3 class="kt-card-title filtros-titulo">Filtros</h3>
+            <button class="kt-btn kt-btn-outline kt-btn-icon size-[30px] shrink-0" id="filtros_toggle" title="Contraer/expandir filtros">
+              <i class="ki-filled ki-black-left-line" id="filtros_toggle_icon"></i>
+            </button>
+          </div>
+          <div class="px-4 py-3 border-b border-border shrink-0 filtros-cuerpo">
+            <label class="filtro-label">Colorear mapa por</label>
+            <select class="kt-select w-full" id="colorear_por">
+              <option value="Preferencia Partido">1. Preferencia de partido</option>
+              <option value="Gubernatura">2. Intención de voto Gubernatura</option>
+              <option value="Sexo">Sexo</option>
+              <option value="Rango edad">Rango de edad</option>
+            </select>
+          </div>
+          <div class="grow px-4 py-3 filtros-cuerpo" id="filtros"></div>
+          <div class="border-t border-border p-4 flex flex-col gap-2 shrink-0 filtros-cuerpo filtros-pie">
+            <button class="kt-btn kt-btn-outline w-full" id="reset">Quitar filtros</button>
+            <button class="kt-btn kt-btn-primary w-full" id="btnResumen">Generar resumen</button>
+            <div id="contador"></div>
+          </div>
+        </div>
+        <!-- Mapa -->
+        <div class="grow relative" id="mapa_area">
+          <div id="map"></div>
+          <div id="leyenda_color">
+            <div class="leyenda-color-cabecera" id="leyenda_color_toggle">
+              <span id="leyenda_color_titulo">Simbología</span>
+              <i class="ki-filled ki-black-left-line" id="leyenda_color_toggle_icon"></i>
+            </div>
+            <div class="leyenda-color-cuerpo" id="leyenda_color_cuerpo"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de atributos expandible/contraible, refleja la seleccion/filtro actual -->
+      <div class="border-t border-border shrink-0 bg-background" id="tabla_datos_panel">
+        <div class="w-full flex items-center justify-between gap-3 px-4 py-2">
+          <button type="button" class="grow flex items-center justify-between text-start text-sm font-medium text-foreground hover:opacity-75" id="tabla_datos_toggle">
+            <span id="tabla_datos_titulo">Tabla de datos — 0 filas</span>
+            <i class="ki-filled ki-down text-sm" id="tabla_datos_toggle_icon"></i>
+          </button>
+          <button type="button" class="kt-btn kt-btn-sm kt-btn-outline shrink-0" id="tabla_datos_limpiar_sel_btn" style="display:none;">Quitar selección de filas (<span id="tabla_datos_contador_sel">0</span>)</button>
+        </div>
+        <div id="tabla_datos_wrap">
+          <div class="tabla-datos-scroll">
+            <table id="tabla_datos" class="w-full">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+    <!-- End of Content -->
+  </div>
+  <!-- End of Wrapper -->
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="assets/js/core.bundle.js"></script>
+<script src="assets/vendors/ktui/ktui.min.js"></script>
+<script src="data.js"></script>
+<script src="kpis.js"></script>
+<script src="secciones_son.js"></script>
+<script>
+  // Columnas usadas como filtros dropdown
+  var columnasFiltro = [
+    "Nombre Municipio", "Preferencia Partido", "Gubernatura",
+    "Codigo Postal", "Distrito Local", "Distrito Federal", "Seccion", "Colonia", "Edad 2027", "Rango edad", "Sexo",
+    "Partido Local", "Partido Nacional", "Servidor Publico", "Beneficiario", "Compania Telefonica", "Nivel Confianza", "Ubicacion"
+  ];
+
+  // Variable usada para colorear los marcadores; se cambia con el selector "Colorear mapa por"
+  var columnaColor = "Preferencia Partido";
+
+  // Paleta de colores estable por valor, independiente por columna coloreada
+  var paleta = ["#e6194b","#3cb44b","#4363d8","#f58231","#911eb4","#46f0f0",
+                "#f032e6","#bcf60c","#fabebe","#008080","#9a6324","#000075",
+                "#808000","#aaffc3","#ffe119","#800000"];
+
+  // Colores fijos por candidato/partido (definidos en kpis.js) y sexo, independientes de la columna que se este coloreando
+  var COLORES_FIJOS = Object.assign({}, COLORES_OPCIONES, {
+    "Hombre": "#2563EB",             // azul
+    "Mujer": "#E4007C"               // rosa
+  });
+  // Degradado morado para Rango edad: mas claro = mas joven, mas oscuro = mas viejo
+  var COLORES_RANGO_EDAD = {
+    "18–24": "#F3E8FF",
+    "25–30": "#E9D5FF",
+    "31–40": "#C4A0F5",
+    "41–59": "#9F63E0",
+    "60–64": "#7C3AED",
+    "65+": "#4C1D95"
+  };
+  var GRIS_SIN_DATO = "#9aa0a6"; // Ninguno / "-" / vacio
+
+  var coloresPorValor = {};
+  var contadorColor = 0;
+  function colorDe(valor) {
+    var clave = columnaColor + '|' + valor;
+    if (!(clave in coloresPorValor)) {
+      var texto = (valor === null || valor === undefined) ? '' : String(valor).trim();
+      if (texto === '' || texto === '-' || texto.toLowerCase() === 'ninguno') {
+        coloresPorValor[clave] = GRIS_SIN_DATO;
+      } else if (COLORES_RANGO_EDAD.hasOwnProperty(texto)) {
+        coloresPorValor[clave] = COLORES_RANGO_EDAD[texto];
+      } else if (COLORES_FIJOS.hasOwnProperty(texto)) {
+        coloresPorValor[clave] = COLORES_FIJOS[texto];
+      } else {
+        coloresPorValor[clave] = paleta[contadorColor % paleta.length];
+        contadorColor++;
+      }
+    }
+    return coloresPorValor[clave];
+  }
+
+  document.getElementById('colorear_por').addEventListener('change', function (e) {
+    columnaColor = e.target.value;
+    construirLeyendaColor();
+    dibujarMarcadores();
+  });
+
+  // ---- Simbologia de la variable coloreada, esquina superior derecha del mapa ----
+  function esVacioColor(v) {
+    var texto = (v === null || v === undefined) ? '' : String(v).trim();
+    return texto === '' || texto === '-' || texto.toLowerCase() === 'ninguno';
+  }
+
+  function crearFilaLeyendaColor(color, etiqueta) {
+    var fila = document.createElement('div');
+    fila.className = 'leyenda-color-fila';
+    var muestra = document.createElement('span');
+    muestra.className = 'leyenda-color-muestra';
+    muestra.style.background = color;
+    var texto = document.createElement('span');
+    texto.textContent = etiqueta;
+    fila.appendChild(muestra);
+    fila.appendChild(texto);
+    return fila;
+  }
+
+  function construirLeyendaColor() {
+    var cuerpo = document.getElementById('leyenda_color_cuerpo');
+    cuerpo.innerHTML = '';
+
+    var opt = document.querySelector('#colorear_por option[value="' + columnaColor + '"]');
+    document.getElementById('leyenda_color_titulo').textContent = 'Simbología — ' + (opt ? opt.textContent : columnaColor);
+
+    var valores;
+    if (columnaColor === 'Rango edad') {
+      valores = ['18–24', '25–30', '31–40', '41–59', '60–64', '65+'].filter(function (v) {
+        return datos.some(function (d) { return d[columnaColor] === v; });
+      });
+    } else if (columnaColor === 'Sexo') {
+      valores = ['Mujer', 'Hombre'].filter(function (v) {
+        return datos.some(function (d) { return d[columnaColor] === v; });
+      });
+    } else {
+      var conteo = {};
+      datos.forEach(function (d) {
+        var v = d[columnaColor];
+        if (esVacioColor(v)) return;
+        var texto = String(v).trim();
+        conteo[texto] = (conteo[texto] || 0) + 1;
+      });
+      valores = Object.keys(conteo).sort(function (a, b) { return conteo[b] - conteo[a]; });
+    }
+
+    valores.forEach(function (v) {
+      cuerpo.appendChild(crearFilaLeyendaColor(colorDe(v), v));
+    });
+
+    var hayVacios = datos.some(function (d) { return esVacioColor(d[columnaColor]); });
+    if (hayVacios) {
+      cuerpo.appendChild(crearFilaLeyendaColor(GRIS_SIN_DATO, 'Sin dato / Ninguno'));
+    }
+  }
+
+  document.getElementById('leyenda_color_toggle').addEventListener('click', function () {
+    document.getElementById('leyenda_color').classList.toggle('leyenda-color-colapsada');
+  });
+
+  // Nombre de cada municipio de la capa a partir de la encuesta (el shapefile solo trae la clave)
+  var NOMBRES_MUNICIPIO = {};
+  datos.forEach(function (d) { if (d.Municipio && d['Nombre Municipio']) NOMBRES_MUNICIPIO[d.Municipio] = d['Nombre Municipio']; });
+  secciones.features.forEach(function (f) {
+    f.properties.Municipio = NOMBRES_MUNICIPIO[f.properties.MunicipioId] || ('MUNICIPIO ' + f.properties.MunicipioId);
+  });
+
+  // Vista inicial ajustada a la extension de las secciones de Sonora (secciones_son.js)
+  var map = L.map('map');
+  var limitesCapa = L.geoJSON(secciones).getBounds();
+  map.fitBounds(limitesCapa);
+  map.setMaxBounds(limitesCapa.pad(0.3));
+  map.setMinZoom(map.getZoom() - 1);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+
+  // Contorno tenue de las secciones, siempre visible, para delimitar el area de la encuesta
+  L.geoJSON(secciones, {
+    renderer: L.canvas(),
+    interactive: false,
+    style: { color: '#1b84ff', weight: 0.5, opacity: 0.35, fill: false }
+  }).addTo(map);
+
+  var capaMarcadores = L.layerGroup().addTo(map);
+
+  var filtrosActivos = {};
+  var checkboxesPorColumna = {};
+
+  function actualizarBoton(col) {
+    var boton = document.getElementById('btn_' + col);
+    if (!boton) return;
+    var seleccion = filtrosActivos[col];
+    if (!seleccion || seleccion.length === 0) {
+      boton.textContent = '-- Todos --';
+    } else if (col === 'Distrito Local' && seleccion.length === 1 && seleccion[0] === NINGUN_DISTRITO) {
+      boton.textContent = 'Ninguno';
+    } else if (seleccion.length === 1) {
+      boton.textContent = seleccion[0];
+    } else {
+      boton.textContent = seleccion.length + ' seleccionados';
+    }
+  }
+
+  // Sincroniza los checkboxes del panel de filtros con filtrosActivos[col],
+  // usado cuando la seleccion cambia desde el HUD en vez del propio checkbox.
+  function sincronizarCheckboxes(col) {
+    var registro = checkboxesPorColumna[col];
+    if (!registro) return;
+    var seleccion = (filtrosActivos[col] || []).map(String);
+    registro.checksValores.forEach(function (chk) {
+      chk.checked = seleccion.indexOf(chk.value) !== -1;
+    });
+    var marcados = registro.checksValores.filter(function (c) { return c.checked; }).length;
+    registro.chkTodos.checked = marcados === registro.checksValores.length;
+    registro.chkTodos.indeterminate = marcados > 0 && marcados < registro.checksValores.length;
+  }
+
+  // Punto unico para cambiar un filtro: actualiza el estado, el panel lateral,
+  // el HUD de Distrito Local y vuelve a dibujar el mapa.
+  function establecerFiltro(col, valores) {
+    if (!valores || valores.length === 0) {
+      delete filtrosActivos[col];
+    } else {
+      filtrosActivos[col] = valores.map(String);
+    }
+    actualizarBoton(col);
+    sincronizarCheckboxes(col);
+    if (col === 'Distrito Local') {
+      actualizarHudDistrito();
+    }
+    dibujarMarcadores();
+  }
+
+  function alternarValorFiltro(col, valor) {
+    var actual = (filtrosActivos[col] || []).map(String);
+    var i = actual.indexOf(String(valor));
+    if (i === -1) {
+      actual.push(String(valor));
+    } else {
+      actual.splice(i, 1);
+    }
+    establecerFiltro(col, actual);
+  }
+
+  function cerrarTodasLasListas(excepto) {
+    document.querySelectorAll('.filtro-lista').forEach(function (l) {
+      if (l !== excepto) l.classList.remove('abierta');
+    });
+  }
+
+  function poblarFiltros() {
+    var cont = document.getElementById('filtros');
+    columnasFiltro.forEach(function (col) {
+      var valoresBrutos = datos.map(function (d) { return d[col]; });
+      // "Nombre Municipio" tambien incluye los municipios de la capa de secciones que no tienen
+      // puntos de encuesta, para poder usarlos y recortar los poligonos.
+      if (col === 'Nombre Municipio' && typeof secciones !== 'undefined') {
+        valoresBrutos = valoresBrutos.concat(secciones.features.map(function (f) { return f.properties.Municipio; }));
+      }
+      var valores = Array.from(new Set(valoresBrutos))
+        .filter(function (v) { return v !== undefined && v !== null && v !== ''; })
+        .sort(function (a, b) { return String(a).localeCompare(String(b), 'es', { numeric: true }); });
+
+      var div = document.createElement('div');
+      div.className = 'filtro';
+      var label = document.createElement('label');
+      label.className = 'filtro-label';
+      label.textContent = col;
+
+      var boton = document.createElement('button');
+      boton.type = 'button';
+      boton.className = 'kt-btn kt-btn-outline w-full justify-start filtro-btn';
+      boton.id = 'btn_' + col;
+      boton.textContent = '-- Todos --';
+
+      var lista = document.createElement('div');
+      lista.className = 'filtro-lista';
+      lista.addEventListener('click', function (e) { e.stopPropagation(); });
+
+      var checksValores = [];
+
+      var optTodos = document.createElement('label');
+      optTodos.className = 'todos';
+      var chkTodos = document.createElement('input');
+      chkTodos.type = 'checkbox';
+      optTodos.appendChild(chkTodos);
+      optTodos.appendChild(document.createTextNode('Seleccionar todos'));
+      lista.appendChild(optTodos);
+
+      function sincronizarTodos() {
+        var marcados = checksValores.filter(function (c) { return c.checked; }).length;
+        chkTodos.checked = marcados === checksValores.length;
+        chkTodos.indeterminate = marcados > 0 && marcados < checksValores.length;
+      }
+
+      valores.forEach(function (v) {
+        var opt = document.createElement('label');
+        var chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.value = v;
+        chk.addEventListener('change', function () {
+          var actual = (filtrosActivos[col] || []).map(String);
+          if (chk.checked) {
+            actual.push(chk.value);
+          } else {
+            actual = actual.filter(function (x) { return x !== chk.value; });
+          }
+          establecerFiltro(col, actual);
+        });
+        opt.appendChild(chk);
+        opt.appendChild(document.createTextNode(v));
+        lista.appendChild(opt);
+        checksValores.push(chk);
+      });
+
+      chkTodos.addEventListener('change', function () {
+        establecerFiltro(col, chkTodos.checked ? valores.map(String) : []);
+      });
+
+      boton.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var abierta = lista.classList.contains('abierta');
+        cerrarTodasLasListas(lista);
+        lista.classList.toggle('abierta', !abierta);
+      });
+
+      checkboxesPorColumna[col] = { chkTodos: chkTodos, checksValores: checksValores };
+
+      div.appendChild(label);
+      div.appendChild(boton);
+      div.appendChild(lista);
+      cont.appendChild(div);
+    });
+
+    document.addEventListener('click', function () { cerrarTodasLasListas(null); });
+  }
+
+  // ---- HUD de botones tipo "slicer" de Power BI, para Distrito Local ----
+  var NINGUN_DISTRITO = '__NINGUNO__'; // valor centinela que no coincide con ningun Distrito Local real
+
+  function poblarHudDistrito() {
+    var hud = document.getElementById('hud_distrito');
+    var valores = Array.from(new Set(datos.map(function (d) { return d['Distrito Local']; })))
+      .filter(function (v) { return v !== undefined && v !== null && v !== ''; })
+      .sort(function (a, b) { return Number(a) - Number(b); });
+
+    var btnTodos = document.createElement('button');
+    btnTodos.type = 'button';
+    btnTodos.className = 'kt-btn kt-btn-sm kt-btn-outline hud-btn hud-btn-todos';
+    btnTodos.textContent = 'Todos';
+    btnTodos.addEventListener('click', function () { establecerFiltro('Distrito Local', []); });
+    hud.appendChild(btnTodos);
+
+    var btnNinguno = document.createElement('button');
+    btnNinguno.type = 'button';
+    btnNinguno.className = 'kt-btn kt-btn-sm kt-btn-outline hud-btn hud-btn-ninguno';
+    btnNinguno.textContent = 'Ninguno';
+    btnNinguno.title = 'Ocultar todos los puntos y secciones';
+    btnNinguno.addEventListener('click', function () { establecerFiltro('Distrito Local', [NINGUN_DISTRITO]); });
+    hud.appendChild(btnNinguno);
+
+    valores.forEach(function (v) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'kt-btn kt-btn-sm kt-btn-outline hud-btn';
+      btn.textContent = v;
+      btn.dataset.valor = String(v);
+      btn.addEventListener('click', function () { alternarValorFiltro('Distrito Local', v); });
+      hud.appendChild(btn);
+    });
+  }
+
+  function actualizarHudDistrito() {
+    var hud = document.getElementById('hud_distrito');
+    var seleccion = (filtrosActivos['Distrito Local'] || []).map(String);
+    hud.querySelectorAll('.hud-btn:not(.hud-btn-todos):not(.hud-btn-ninguno)').forEach(function (btn) {
+      btn.classList.toggle('hud-btn-activo', seleccion.indexOf(btn.dataset.valor) !== -1);
+    });
+    hud.querySelector('.hud-btn-todos').classList.toggle('hud-btn-activo', seleccion.length === 0);
+    hud.querySelector('.hud-btn-ninguno').classList.toggle('hud-btn-activo', seleccion.length === 1 && seleccion[0] === NINGUN_DISTRITO);
+  }
+
+  function filaCoincide(fila) {
+    for (var col in filtrosActivos) {
+      var seleccion = filtrosActivos[col];
+      if (seleccion.indexOf(String(fila[col])) === -1) return false;
+    }
+    return true;
+  }
+
+  function construirPopup(fila) {
+    var html = '<table>';
+    Object.keys(fila).forEach(function (k) {
+      html += '<tr><td class="k">' + k + '</td><td>' + (fila[k] === null || fila[k] === undefined || fila[k] === '' ? '-' : fila[k]) + '</td></tr>';
+    });
+    html += '</table>';
+    return html;
+  }
+
+  // ---- Seleccion de filas en la tabla de atributos <-> puntos resaltados en el mapa ----
+  var filasSeleccionadas = new Set(); // filas (objetos de `datos`) seleccionadas desde la tabla
+  var marcadoresPorFila = new Map();  // fila -> marcador Leaflet, reconstruido en cada dibujarMarcadores()
+  var ESTILO_MARCADOR_NORMAL = { radius: 6, color: '#333', weight: 1 };
+  var ESTILO_MARCADOR_SELECCIONADO = { radius: 10, color: '#111827', weight: 3 };
+
+  function aplicarEstiloSeleccionMarcador(fila) {
+    var marcador = marcadoresPorFila.get(fila);
+    if (!marcador) return;
+    if (filasSeleccionadas.has(fila)) {
+      marcador.setStyle(ESTILO_MARCADOR_SELECCIONADO);
+      marcador.bringToFront();
+    } else {
+      marcador.setStyle(ESTILO_MARCADOR_NORMAL);
+    }
+  }
+
+  function actualizarContadorSeleccionFilas() {
+    var n = filasSeleccionadas.size;
+    document.getElementById('tabla_datos_contador_sel').textContent = n;
+    document.getElementById('tabla_datos_limpiar_sel_btn').style.display = n > 0 ? 'inline-flex' : 'none';
+  }
+
+  function alternarSeleccionFila(fila, tr) {
+    if (filasSeleccionadas.has(fila)) {
+      filasSeleccionadas.delete(fila);
+      tr.classList.remove('fila-seleccionada');
+    } else {
+      filasSeleccionadas.add(fila);
+      tr.classList.add('fila-seleccionada');
+    }
+    aplicarEstiloSeleccionMarcador(fila);
+    actualizarContadorSeleccionFilas();
+  }
+
+  document.getElementById('tabla_datos_limpiar_sel_btn').addEventListener('click', function (e) {
+    e.stopPropagation();
+    filasSeleccionadas.forEach(function (fila) {
+      var marcador = marcadoresPorFila.get(fila);
+      if (marcador) marcador.setStyle(ESTILO_MARCADOR_NORMAL);
+    });
+    filasSeleccionadas.clear();
+    document.querySelectorAll('#tabla_datos tbody tr.fila-seleccionada').forEach(function (tr) {
+      tr.classList.remove('fila-seleccionada');
+    });
+    actualizarContadorSeleccionFilas();
+  });
+
+  function dibujarMarcadores() {
+    capaMarcadores.clearLayers();
+    marcadoresPorFila = new Map();
+    var n = 0;
+    var filtrados = [];
+    datos.forEach(function (fila) {
+      if (!filaCoincide(fila)) return;
+      filtrados.push(fila);
+      var lat = fila.Lat, lon = fila.Lon;
+      if (typeof lat !== 'number' || typeof lon !== 'number') return;
+      n++;
+      var marcador = L.circleMarker([lat, lon], Object.assign({
+        fillColor: colorDe(fila[columnaColor]),
+        fillOpacity: 0.85
+      }, ESTILO_MARCADOR_NORMAL));
+      marcador.bindPopup(construirPopup(fila));
+      capaMarcadores.addLayer(marcador);
+      marcadoresPorFila.set(fila, marcador);
+    });
+    document.getElementById('contador').textContent = n + ' puntos mostrados de ' + datos.length;
+    document.getElementById('contador_header').textContent = n + ' puntos';
+    filasSeleccionadas.forEach(aplicarEstiloSeleccionMarcador);
+    construirTablaDatos(filtrados);
+    actualizarCapaSecciones(filtrados);
+  }
+
+  // ---- Tabla de atributos inferior: muestra todas las columnas de EncuestaSonora.xlsx
+  // para las filas que coinciden con la seleccion/filtro actual, con orden A-Z / mayor-menor
+  // al hacer clic en cualquier encabezado de columna ----
+  var LIMITE_FILAS_TABLA = 500; // limite de filas renderizadas por rendimiento; el conteo real siempre se muestra
+  var columnasTabla = null;
+  var filtradosTablaActual = [];
+  var ordenTabla = { columna: null, direccion: 1 }; // direccion: 1 = A-Z / menor-mayor, -1 = Z-A / mayor-menor
+
+  function esVacio(v) { return v === null || v === undefined || v === ''; }
+
+  function compararValoresTabla(a, b) {
+    var an = Number(a), bn = Number(b);
+    if (!isNaN(an) && !isNaN(bn)) return an - bn;
+    return String(a).localeCompare(String(b), 'es', { numeric: true, sensitivity: 'base' });
+  }
+
+  function actualizarIndicadoresOrdenTabla() {
+    document.querySelectorAll('#tabla_datos thead th').forEach(function (th) {
+      th.classList.remove('col-orden-asc', 'col-orden-desc');
+      if (th.dataset.col === ordenTabla.columna) {
+        th.classList.add(ordenTabla.direccion === 1 ? 'col-orden-asc' : 'col-orden-desc');
+      }
+    });
+  }
+
+  function renderCuerpoTabla() {
+    var lista = filtradosTablaActual;
+    if (ordenTabla.columna) {
+      var col = ordenTabla.columna, dir = ordenTabla.direccion;
+      lista = lista.slice().sort(function (fa, fb) {
+        var av = fa[col], bv = fb[col];
+        var aVacio = esVacio(av), bVacio = esVacio(bv);
+        if (aVacio && bVacio) return 0;
+        if (aVacio) return 1; // los vacios siempre al final, sin importar la direccion
+        if (bVacio) return -1;
+        return compararValoresTabla(av, bv) * dir;
+      });
+    }
+    var tbody = document.querySelector('#tabla_datos tbody');
+    var frag = document.createDocumentFragment();
+    lista.slice(0, LIMITE_FILAS_TABLA).forEach(function (fila) {
+      var tr = document.createElement('tr');
+      if (filasSeleccionadas.has(fila)) tr.classList.add('fila-seleccionada');
+      columnasTabla.forEach(function (col) {
+        var td = document.createElement('td');
+        var v = fila[col];
+        td.textContent = (v === null || v === undefined || v === '') ? '-' : v;
+        tr.appendChild(td);
+      });
+      tr.addEventListener('click', function () { alternarSeleccionFila(fila, tr); });
+      frag.appendChild(tr);
+    });
+    tbody.innerHTML = '';
+    tbody.appendChild(frag);
+  }
+
+  function construirTablaDatos(filtrados) {
+    if (!columnasTabla) columnasTabla = Object.keys(datos[0]);
+    filtradosTablaActual = filtrados;
+
+    var thead = document.querySelector('#tabla_datos thead');
+    if (!thead.children.length) {
+      var trCab = document.createElement('tr');
+      columnasTabla.forEach(function (col) {
+        var th = document.createElement('th');
+        th.textContent = col;
+        th.dataset.col = col;
+        th.className = 'col-ordenable';
+        th.title = 'Ordenar por ' + col;
+        th.addEventListener('click', function () {
+          if (ordenTabla.columna === col) {
+            ordenTabla.direccion = -ordenTabla.direccion;
+          } else {
+            ordenTabla.columna = col;
+            ordenTabla.direccion = 1;
+          }
+          actualizarIndicadoresOrdenTabla();
+          renderCuerpoTabla();
+        });
+        trCab.appendChild(th);
+      });
+      thead.appendChild(trCab);
+      actualizarIndicadoresOrdenTabla();
+    }
+
+    renderCuerpoTabla();
+
+    var titulo = 'Tabla de datos — ' + filtrados.length + ' fila' + (filtrados.length === 1 ? '' : 's');
+    if (filtrados.length > LIMITE_FILAS_TABLA) titulo += ' (mostrando las primeras ' + LIMITE_FILAS_TABLA + ')';
+    document.getElementById('tabla_datos_titulo').textContent = titulo;
+  }
+
+  document.getElementById('tabla_datos_toggle').addEventListener('click', function () {
+    var wrap = document.getElementById('tabla_datos_wrap');
+    var icono = document.getElementById('tabla_datos_toggle_icon');
+    var abierta = wrap.classList.toggle('tabla-datos-abierta');
+    icono.classList.toggle('tabla-datos-icono-abierto', abierta);
+  });
+
+  document.getElementById('tabla_datos_wrap').addEventListener('transitionend', function (e) {
+    if (e.propertyName === 'max-height') map.invalidateSize();
+  });
+
+  document.getElementById('reset').addEventListener('click', function (e) {
+    e.stopPropagation();
+    filtrosActivos = {};
+    document.querySelectorAll('#filtros input[type=checkbox]').forEach(function (c) { c.checked = false; c.indeterminate = false; });
+    columnasFiltro.forEach(actualizarBoton);
+    actualizarHudDistrito();
+    dibujarMarcadores();
+  });
+
+  // ---- Ventanas de resumen ----
+  var contadorVentanas = 0;
+
+  function hacerArrastrable(ventana, cabecera) {
+    var offX = 0, offY = 0, arrastrando = false;
+    cabecera.addEventListener('mousedown', function (e) {
+      arrastrando = true;
+      offX = e.clientX - ventana.offsetLeft;
+      offY = e.clientY - ventana.offsetTop;
+    });
+    document.addEventListener('mousemove', function (e) {
+      if (!arrastrando) return;
+      ventana.style.left = (e.clientX - offX) + 'px';
+      ventana.style.top = (e.clientY - offY) + 'px';
+    });
+    document.addEventListener('mouseup', function () { arrastrando = false; });
+  }
+
+  function crearVentanaResumen(datosFiltrados, origen) {
+
+    // Conteo por la variable actualmente seleccionada para colorear el mapa
+    var conteoCandidato = {};
+    datosFiltrados.forEach(function (f) {
+      var c = f[columnaColor] || '(sin dato)';
+      conteoCandidato[c] = (conteoCandidato[c] || 0) + 1;
+    });
+    var candidatos = Object.keys(conteoCandidato).sort(function (a, b) { return conteoCandidato[b] - conteoCandidato[a]; });
+    var maxConteo = Math.max.apply(null, candidatos.map(function (c) { return conteoCandidato[c]; }).concat([1]));
+
+    // Tabla pivote: filas = variable seleccionada, columnas = Distrito Local
+    var distritos = Array.from(new Set(datosFiltrados.map(function (f) { return f['Distrito Local']; })))
+      .filter(function (v) { return v !== undefined && v !== null && v !== ''; })
+      .sort(function (a, b) { return Number(a) - Number(b); });
+    var pivote = {};
+    candidatos.forEach(function (c) { pivote[c] = {}; });
+    datosFiltrados.forEach(function (f) {
+      var c = f[columnaColor] || '(sin dato)';
+      var d = f['Distrito Local'];
+      if (d === undefined || d === null || d === '') return;
+      if (!pivote[c]) pivote[c] = {};
+      pivote[c][d] = (pivote[c][d] || 0) + 1;
+    });
+
+    contadorVentanas++;
+    var ventana = document.createElement('div');
+    ventana.className = 'ventana';
+    var offset = (contadorVentanas - 1) * 24;
+    ventana.style.top = (60 + offset) + 'px';
+    ventana.style.left = (320 + offset) + 'px';
+
+    var cabecera = document.createElement('div');
+    cabecera.className = 'ventana-cabecera';
+    var titulo = document.createElement('div');
+    titulo.className = 'ventana-titulo';
+    titulo.textContent = 'Resumen #' + contadorVentanas + ' (' + (origen ? origen + ', ' : '') + datosFiltrados.length + ' puntos)';
+    var botones = document.createElement('div');
+    botones.className = 'ventana-botones';
+    var btnMin = document.createElement('button');
+    btnMin.textContent = '_';
+    btnMin.title = 'Minimizar';
+    var btnAmpliar = document.createElement('button');
+    btnAmpliar.textContent = '□';
+    btnAmpliar.title = 'Ampliar';
+    var btnCerrar = document.createElement('button');
+    btnCerrar.textContent = '✕';
+    btnCerrar.title = 'Cerrar';
+    botones.appendChild(btnMin);
+    botones.appendChild(btnAmpliar);
+    botones.appendChild(btnCerrar);
+    cabecera.appendChild(titulo);
+    cabecera.appendChild(botones);
+
+    var cuerpo = document.createElement('div');
+    cuerpo.className = 'ventana-cuerpo';
+
+    var total = document.createElement('div');
+    total.className = 'resumen-total';
+    total.textContent = 'Total de puntos seleccionados: ' + datosFiltrados.length;
+    cuerpo.appendChild(total);
+
+    var graficoTitulo = document.createElement('div');
+    graficoTitulo.innerHTML = '<b>' + columnaColor + '</b>';
+    cuerpo.appendChild(graficoTitulo);
+
+    var grafico = document.createElement('div');
+    candidatos.forEach(function (c) {
+      var fila = document.createElement('div');
+      fila.className = 'barra-fila';
+      var etq = document.createElement('div');
+      etq.className = 'barra-etiqueta';
+      etq.title = c;
+      etq.textContent = c;
+      var visual = document.createElement('div');
+      visual.className = 'barra-visual';
+      var rellena = document.createElement('div');
+      rellena.className = 'barra-rellena';
+      rellena.style.width = (conteoCandidato[c] / maxConteo * 100) + '%';
+      rellena.style.background = colorDe(c === '(sin dato)' ? '' : c);
+      visual.appendChild(rellena);
+      var valor = document.createElement('div');
+      valor.className = 'barra-valor';
+      valor.textContent = conteoCandidato[c];
+      fila.appendChild(etq);
+      fila.appendChild(visual);
+      fila.appendChild(valor);
+      grafico.appendChild(fila);
+    });
+    cuerpo.appendChild(grafico);
+
+    var pivoteTitulo = document.createElement('div');
+    pivoteTitulo.style.marginTop = '10px';
+    pivoteTitulo.innerHTML = '<b>' + columnaColor + ' x Distrito Local</b>';
+    cuerpo.appendChild(pivoteTitulo);
+
+    var wrap = document.createElement('div');
+    wrap.className = 'tabla-pivote-wrap';
+    var tabla = document.createElement('table');
+    tabla.className = 'tabla-pivote';
+    var thead = document.createElement('tr');
+    thead.appendChild(document.createElement('th'));
+    distritos.forEach(function (d) {
+      var th = document.createElement('th');
+      th.textContent = d;
+      thead.appendChild(th);
+    });
+    var thTotal = document.createElement('th');
+    thTotal.textContent = 'Total';
+    thead.appendChild(thTotal);
+    tabla.appendChild(thead);
+
+    candidatos.forEach(function (c) {
+      var tr = document.createElement('tr');
+      var tdEtq = document.createElement('td');
+      tdEtq.className = 'etq';
+      tdEtq.textContent = c;
+      tr.appendChild(tdEtq);
+      distritos.forEach(function (d) {
+        var td = document.createElement('td');
+        td.textContent = (pivote[c] && pivote[c][d]) ? pivote[c][d] : '';
+        tr.appendChild(td);
+      });
+      var tdTotal = document.createElement('td');
+      tdTotal.style.fontWeight = 'bold';
+      tdTotal.textContent = conteoCandidato[c];
+      tr.appendChild(tdTotal);
+      tabla.appendChild(tr);
+    });
+    wrap.appendChild(tabla);
+    cuerpo.appendChild(wrap);
+
+    ventana.appendChild(cabecera);
+    ventana.appendChild(cuerpo);
+    document.body.appendChild(ventana);
+
+    btnMin.addEventListener('click', function () {
+      ventana.classList.toggle('minimizada');
+    });
+    var ampliada = false;
+    btnAmpliar.addEventListener('click', function () {
+      ampliada = !ampliada;
+      ventana.style.width = ampliada ? '800px' : '480px';
+    });
+    btnCerrar.addEventListener('click', function () {
+      ventana.remove();
+    });
+
+    hacerArrastrable(ventana, cabecera);
+  }
+
+  document.getElementById('btnResumen').addEventListener('click', function (e) {
+    e.stopPropagation();
+    crearVentanaResumen(datos.filter(filaCoincide));
+  });
+
+  // Contraer/expandir la columna de filtros
+  document.getElementById('filtros_toggle').addEventListener('click', function () {
+    document.getElementById('filtros_sidebar').classList.toggle('filtros-colapsado');
+  });
+
+  // El mapa debe reajustarse cuando cambie el ancho de la columna de filtros
+  // o el de la barra lateral principal del menú (ambas animan su ancho con CSS).
+  document.getElementById('filtros_sidebar').addEventListener('transitionend', function (e) {
+    if (e.propertyName === 'width') map.invalidateSize();
+  });
+  document.querySelector('.kt-wrapper').addEventListener('transitionend', function (e) {
+    if (e.propertyName === 'padding-inline-start') map.invalidateSize();
+  });
+
+  // ---- Capa de secciones (shapefile SON): cada seccion se rellena con la respuesta que
+  // encabeza la variable de "Colorear mapa por" entre los registros filtrados de esa seccion ----
+  var capaSecc = null;
+  var capaSeccActiva = false;
+  var capaSeccLayers = []; // { layer, feature } de cada seccion, para filtrar/colorear/sumar
+  var seccionesSeleccionadas = new Set(); // layers de Leaflet actualmente seleccionados
+  var registrosPorSeccion = {}; // Seccion -> registros filtrados que caen en ella
+
+  var ESTILO_SECC_NORMAL = { color: '#828282', weight: 0.6, fillOpacity: 0.6 };
+  var ESTILO_SECC_SELECCIONADA = { color: '#111827', weight: 3, fillOpacity: 0.8 };
+  var ESTILO_SECC_SIN_DATOS = { fillColor: '#ffffff', fillOpacity: 0 };
+
+  // Respuesta que encabeza la variable coloreada en una seccion (sin contar "sin dato")
+  function liderSeccion(seccion) {
+    var conteo = {};
+    (registrosPorSeccion[seccion] || []).forEach(function (d) {
+      if (esVacioColor(d[columnaColor])) return;
+      var v = String(d[columnaColor]).trim();
+      conteo[v] = (conteo[v] || 0) + 1;
+    });
+    var orden = Object.keys(conteo).sort(function (a, b) { return conteo[b] - conteo[a]; });
+    return orden.length ? orden[0] : null;
+  }
+
+  function estiloSeccion(layer) {
+    var seccion = layer.feature.properties.Seccion;
+    var base = seccionesSeleccionadas.has(layer) ? ESTILO_SECC_SELECCIONADA : ESTILO_SECC_NORMAL;
+    if (!(registrosPorSeccion[seccion] || []).length) return Object.assign({}, base, ESTILO_SECC_SIN_DATOS);
+    var lider = liderSeccion(seccion);
+    return Object.assign({ fillColor: lider ? colorDe(lider) : GRIS_SIN_DATO }, base);
+  }
+
+  function construirPopupSeccion(p) {
+    var registros = registrosPorSeccion[p.Seccion] || [];
+    var conteo = {};
+    registros.forEach(function (d) {
+      var v = esVacioColor(d[columnaColor]) ? 'Sin dato' : String(d[columnaColor]).trim();
+      conteo[v] = (conteo[v] || 0) + 1;
+    });
+    var filasConteo = Object.keys(conteo).sort(function (a, b) { return conteo[b] - conteo[a]; }).map(function (k) {
+      return '<tr><td class="k">' + k + '</td><td>' + conteo[k] + '</td></tr>';
+    }).join('');
+    var opt = document.querySelector('#colorear_por option[value="' + columnaColor + '"]');
+    return '<table>' +
+      '<tr><td class="k">Sección</td><td>' + p.Seccion + '</td></tr>' +
+      '<tr><td class="k">Municipio</td><td>' + (p.Municipio || '-') + '</td></tr>' +
+      '<tr><td class="k">Distrito Local</td><td>' + p.DistritoLocal + '</td></tr>' +
+      '<tr><td class="k">Distrito Federal</td><td>' + p.DistritoFederal + '</td></tr>' +
+      '<tr><td class="k">Encuestas</td><td>' + registros.length + '</td></tr>' +
+      (registros.length ? '<tr><td class="k" colspan="2">' + (opt ? opt.textContent : columnaColor) + '</td></tr>' + filasConteo : '') +
+      '</table>';
+  }
+
+  function actualizarBotonesSeleccionSecc() {
+    var n = seccionesSeleccionadas.size;
+    document.getElementById('capa_secc_contador_sel').textContent = n;
+    document.getElementById('capa_secc_limpiar_btn').style.display = n > 0 && capaSeccActiva ? 'inline-flex' : 'none';
+  }
+
+  function alternarSeleccionSeccion(layer) {
+    if (seccionesSeleccionadas.has(layer)) {
+      seccionesSeleccionadas.delete(layer);
+    } else {
+      seccionesSeleccionadas.add(layer);
+      layer.bringToFront();
+    }
+    layer.setStyle(estiloSeccion(layer));
+    actualizarBotonesSeleccionSecc();
+  }
+
+  function construirCapaSecciones() {
+    capaSecc = L.geoJSON(secciones, {
+      renderer: L.canvas(),
+      style: function () { return ESTILO_SECC_NORMAL; },
+      onEachFeature: function (feature, layer) {
+        layer.bindPopup(function () { return construirPopupSeccion(feature.properties); });
+        layer.on('click', function () { alternarSeleccionSeccion(layer); });
+        capaSeccLayers.push({ layer: layer, feature: feature });
+      }
+    });
+  }
+
+  // Columnas del sidebar/HUD que tambien recortan las secciones de la capa,
+  // mapeadas a la propiedad correspondiente de cada feature (distritos segun el shapefile).
+  var MAPEO_FILTRO_SECC = {
+    'Distrito Local': 'DistritoLocal',
+    'Distrito Federal': 'DistritoFederal',
+    'Nombre Municipio': 'Municipio',
+    'Seccion': 'Seccion'
+  };
+
+  // Recalcula los registros por seccion con los filtros actuales, muestra solo las secciones
+  // que coinciden con los filtros geograficos y vuelve a colorearlas.
+  function actualizarCapaSecciones(filtrados) {
+    registrosPorSeccion = {};
+    filtrados.forEach(function (d) {
+      (registrosPorSeccion[d.Seccion] = registrosPorSeccion[d.Seccion] || []).push(d);
+    });
+    if (!capaSecc) return;
+    capaSeccLayers.forEach(function (item) {
+      var coincide = true;
+      for (var col in MAPEO_FILTRO_SECC) {
+        var seleccion = filtrosActivos[col];
+        if (!seleccion || seleccion.length === 0) continue;
+        if (seleccion.indexOf(String(item.feature.properties[MAPEO_FILTRO_SECC[col]])) === -1) {
+          coincide = false;
+          break;
+        }
+      }
+      var estaEnMapa = capaSecc.hasLayer(item.layer);
+      if (coincide && !estaEnMapa) capaSecc.addLayer(item.layer);
+      if (!coincide && estaEnMapa) capaSecc.removeLayer(item.layer);
+      if (coincide) item.layer.setStyle(estiloSeccion(item.layer));
+    });
+  }
+
+  document.getElementById('capa_secc_btn').addEventListener('click', function () {
+    var boton = this;
+    capaSeccActiva = !capaSeccActiva;
+    boton.classList.toggle('hud-btn-activo', capaSeccActiva);
+    document.getElementById('capa_secc_resumen_btn').style.display = capaSeccActiva ? 'inline-flex' : 'none';
+
+    if (capaSeccActiva) {
+      if (!capaSecc) construirCapaSecciones();
+      capaSecc.addTo(map);
+      actualizarCapaSecciones(datos.filter(filaCoincide));
+      capaSecc.bringToBack();
+      capaMarcadores.eachLayer(function (l) { l.bringToFront(); });
+    } else {
+      map.removeLayer(capaSecc);
+    }
+    actualizarBotonesSeleccionSecc();
+  });
+
+  document.getElementById('capa_secc_limpiar_btn').addEventListener('click', function () {
+    var anteriores = Array.from(seccionesSeleccionadas);
+    seccionesSeleccionadas.clear();
+    anteriores.forEach(function (layer) { layer.setStyle(estiloSeccion(layer)); });
+    actualizarBotonesSeleccionSecc();
+  });
+
+  // Resumen de las secciones: si hay secciones seleccionadas (clic sobre los poligonos) se resumen
+  // los registros filtrados de esas; si no, los de todas las secciones visibles en el mapa.
+  document.getElementById('capa_secc_resumen_btn').addEventListener('click', function (e) {
+    e.stopPropagation();
+    var capas = seccionesSeleccionadas.size > 0
+      ? Array.from(seccionesSeleccionadas)
+      : capaSeccLayers.filter(function (item) { return capaSecc.hasLayer(item.layer); }).map(function (item) { return item.layer; });
+    var registros = [];
+    capas.forEach(function (layer) {
+      registros = registros.concat(registrosPorSeccion[layer.feature.properties.Seccion] || []);
+    });
+    crearVentanaResumen(registros, capas.length + ' secciones');
+  });
+
+  construirLeyendaColor();
+  poblarFiltros();
+  poblarHudDistrito();
+  actualizarHudDistrito();
+  dibujarMarcadores();
+</script>
+</body>
+</html>

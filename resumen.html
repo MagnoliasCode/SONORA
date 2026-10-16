@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html class="h-full" data-kt-theme="true" data-kt-theme-mode="light" lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Resumen y hallazgos - Encuesta Sonora</title>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+<link href="assets/media/app/favicon.ico" rel="shortcut icon">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="assets/vendors/keenicons/styles.bundle.css" rel="stylesheet">
+<link href="assets/css/styles.css" rel="stylesheet">
+<style>
+  @font-face {
+    font-family: 'TitilliumWeb';
+    src: url('TitilliumWeb-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  /* Numeros del proyecto: fuente y tamaño unificados; los totales llevan negritas */
+  .num { font-family: 'TitilliumWeb', sans-serif; font-size: 13px; }
+  .num-total { font-family: 'TitilliumWeb', sans-serif; font-size: 13px; font-weight: 700; }
+</style>
+</head>
+<body class="antialiased flex h-full text-base text-foreground bg-background demo1 kt-sidebar-fixed kt-header-fixed">
+<script>
+  document.documentElement.classList.add('light');
+</script>
+
+<div class="flex grow">
+  <!-- Sidebar -->
+  <div class="kt-sidebar bg-background border-e border-e-border fixed top-0 bottom-0 z-20 hidden lg:flex flex-col items-stretch shrink-0 [--kt-drawer-enable:true] lg:[--kt-drawer-enable:false]" data-kt-drawer="true" data-kt-drawer-class="kt-drawer kt-drawer-start top-0 bottom-0" id="sidebar">
+    <div class="kt-sidebar-header hidden lg:flex items-center relative justify-between px-3 lg:px-6 shrink-0" id="sidebar_header">
+      <div class="kt-sidebar-logo min-w-0 flex items-center gap-2">
+        <i class="ki-filled ki-chart-simple text-xl text-primary"></i>
+        <span class="font-semibold text-sm text-mono truncate">Encuesta Sonora</span>
+      </div>
+      <button class="kt-btn kt-btn-outline kt-btn-icon size-[30px] absolute start-full top-2/4 z-40 -translate-x-2/4 -translate-y-2/4" data-kt-toggle="body" data-kt-toggle-class="kt-sidebar-collapse" id="sidebar_toggle">
+        <i class="ki-filled ki-black-left-line kt-toggle-active:rotate-180 transition-all duration-300"></i>
+      </button>
+    </div>
+    <div class="kt-sidebar-content flex grow shrink-0 py-5 pe-2" id="sidebar_content">
+      <div class="kt-scrollable-y-hover grow shrink-0 flex ps-2 lg:ps-5 pe-1 lg:pe-3" data-kt-scrollable="true" data-kt-scrollable-dependencies="#sidebar_header" data-kt-scrollable-height="auto" data-kt-scrollable-offset="0px" data-kt-scrollable-wrappers="#sidebar_content" id="sidebar_scrollable">
+        <div class="kt-menu flex flex-col grow gap-1" data-kt-menu="true" id="sidebar_menu">
+          <div class="kt-menu-item">
+            <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[10px] ps-[10px] pe-[10px] py-[8px]" href="index.html">
+              <span class="kt-menu-icon items-start text-muted-foreground w-[20px]"><i class="ki-filled ki-map text-lg"></i></span>
+              <span class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold">Mapa interactivo</span>
+            </a>
+          </div>
+          <div class="kt-menu-item">
+            <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[10px] ps-[10px] pe-[10px] py-[8px]" href="dashboard.html">
+              <span class="kt-menu-icon items-start text-muted-foreground w-[20px]"><i class="ki-filled ki-chart-simple text-lg"></i></span>
+              <span class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold">Dashboard KPIs</span>
+            </a>
+          </div>
+          <div class="kt-menu-item active">
+            <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[10px] ps-[10px] pe-[10px] py-[8px]" href="resumen.html">
+              <span class="kt-menu-icon items-start text-muted-foreground w-[20px]"><i class="ki-filled ki-book-open text-lg"></i></span>
+              <span class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold">Resumen y hallazgos</span>
+            </a>
+          </div>
+          <div class="kt-menu-item">
+            <a class="kt-menu-link border border-transparent items-center grow hover:bg-accent/60 hover:rounded-lg gap-[10px] ps-[10px] pe-[10px] py-[8px]" href="EncuestaSonora.csv" download="EncuestaSonora.csv">
+              <span class="kt-menu-icon items-start text-muted-foreground w-[20px]"><i class="ki-filled ki-file-down text-lg"></i></span>
+              <span class="kt-menu-title text-sm font-medium text-foreground">Descargar datos (CSV)</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- End of Sidebar -->
+
+  <!-- Wrapper -->
+  <div class="kt-wrapper flex grow flex-col">
+    <!-- Header -->
+    <header class="kt-header fixed top-0 z-10 start-0 end-0 flex items-stretch shrink-0 bg-background" data-kt-sticky="true" data-kt-sticky-class="border-b border-border" data-kt-sticky-name="header" id="header">
+      <div class="kt-container-fixed flex justify-between items-stretch lg:gap-4" id="headerContainer">
+        <div class="flex gap-2.5 lg:hidden items-center -ms-1">
+          <button class="kt-btn kt-btn-icon kt-btn-ghost" data-kt-drawer-toggle="#sidebar">
+            <i class="ki-filled ki-menu"></i>
+          </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <i class="ki-filled ki-book-open text-lg text-primary"></i>
+          <span class="text-sm font-medium text-mono">Resumen y hallazgos</span>
+        </div>
+        <div class="flex items-center gap-2.5"></div>
+      </div>
+    </header>
+    <!-- End of Header -->
+
+    <!-- Content -->
+    <main class="grow pt-5" id="content" role="content">
+      <div class="kt-container-fixed">
+        <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+          <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Resumen y hallazgos — Sonora</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">Narrativa de los puntos más importantes de la encuesta</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kt-container-fixed">
+        <div class="grid lg:grid-cols-3 gap-5 lg:gap-7.5">
+          <div class="lg:col-span-2">
+            <div class="kt-card">
+              <div class="kt-card-content p-7.5">
+                <article class="flex flex-col gap-6 text-sm leading-6.5 text-foreground">
+
+                  <section>
+                    <h2 class="text-lg font-semibold text-mono mb-2">Panorama general</h2>
+                    <p>
+                      Se levantaron <b id="n_total" class="num-total">-</b> encuestas telefónicas en Sonora, en
+                      <b id="n_municipios" class="num">-</b> municipios, <b id="n_df" class="num">-</b> distritos
+                      federales y <b id="n_dl" class="num">-</b> distritos locales, cubriendo
+                      <b id="n_colonias" class="num">-</b> colonias y <b id="n_secciones" class="num">-</b> secciones
+                      electorales. Todas las llamadas quedaron georreferenciadas dentro de las secciones del estado
+                      (ver el <a class="kt-link" href="index.html">mapa interactivo</a>).
+                    </p>
+                  </section>
+
+                  <section>
+                    <h2 class="text-lg font-semibold text-mono mb-2">Preferencia de partido</h2>
+                    <p>
+                      A nivel partido, <b id="n_top_partido">-</b> encabeza la preferencia con
+                      <b id="n_top_partido_valor" class="num">-</b> menciones (<b id="n_top_partido_pct" class="num">-</b>% del
+                      total), seguido por <b id="n_segundo_partido">-</b> con
+                      <b id="n_segundo_partido_pct" class="num">-</b>%. Un <b id="n_sin_partido_pct" class="num">-</b>% de las
+                      personas encuestadas no manifestó preferencia por ningún partido.
+                    </p>
+                  </section>
+
+                  <section>
+                    <h2 class="text-lg font-semibold text-mono mb-2">Intención de voto a la Gubernatura</h2>
+                    <p>
+                      Para la gubernatura de Sonora, <b id="n_top_gub">-</b> encabeza la intención de voto con
+                      <b id="n_top_gub_valor" class="num">-</b> menciones (<b id="n_top_gub_pct" class="num">-</b>% del
+                      total), seguido por <b id="n_segundo_gub">-</b> con <b id="n_segundo_gub_pct" class="num">-</b>%,
+                      una ventaja de <b id="n_ventaja_gub" class="num">-</b> puntos. Un
+                      <b id="n_sin_gub_pct" class="num">-</b>% de las personas no indicó por quién votaría.
+                    </p>
+                  </section>
+
+                  <section>
+                    <h2 class="text-lg font-semibold text-mono mb-2">Partido vs. candidato</h2>
+                    <p id="n_lealtad">-</p>
+                  </section>
+
+                  <section>
+                    <h2 class="text-lg font-semibold text-mono mb-2">Perfil demográfico</h2>
+                    <p>
+                      Por sexo, <b id="n_sexo_top">-</b> concentra el <b id="n_sexo_top_pct" class="num">-</b>%
+                      de las respuestas. El rango de edad más representado es
+                      <b id="n_edad_top" class="num">-</b> años, con <b id="n_edad_top_pct" class="num">-</b>% del total,
+                      lo que sugiere dónde conviene enfocar mensajes y canales de comunicación.
+                    </p>
+                  </section>
+
+                  <section>
+                    <h2 class="text-lg font-semibold text-mono mb-2">Concentración geográfica</h2>
+                    <p>
+                      El municipio con más encuestas es <b id="n_municipio_top">-</b>, con
+                      <b id="n_municipio_top_valor" class="num">-</b> registros. A nivel colonia, la de mayor
+                      presencia es <b id="n_colonia_top">-</b> con <b id="n_colonia_top_valor" class="num">-</b>
+                      registros, lo que da una base para cruzar resultados con el mapa por municipio, sección y distrito.
+                    </p>
+                  </section>
+
+                  <section>
+                    <h2 class="text-lg font-semibold text-mono mb-2">Operación del levantamiento</h2>
+                    <p>
+                      Las llamadas se realizaron entre el <b id="n_fecha_inicio" class="num">-</b> y el
+                      <b id="n_fecha_fin" class="num">-</b>, a <b id="n_telefonos" class="num">-</b> números de
+                      teléfono distintos. <b id="n_con_ubicacion" class="num">-</b> registros
+                      (<b id="n_con_ubicacion_pct" class="num">-</b>%) aparecen en el mapa; de ellos,
+                      <b id="n_aproximada" class="num">-</b> tenían su punto fuera de las secciones y se ubicaron
+                      en el centro de su sección electoral.
+                    </p>
+                  </section>
+
+                  <section>
+                    <h2 class="text-lg font-semibold text-mono mb-2">Conclusión</h2>
+                    <p>
+                      <b id="n_top_partido_2">-</b> encabeza la preferencia por partido y
+                      <b id="n_top_gub_2">-</b> lidera la intención de voto a la gubernatura. Se recomienda
+                      revisar el <a class="kt-link" href="dashboard.html">dashboard de KPIs</a> —en especial el
+                      comparativo por región y el cruce partido/candidato— y el
+                      <a class="kt-link" href="index.html">mapa interactivo</a>, activando la capa de secciones y
+                      cambiando la variable de color entre partido y gubernatura, para priorizar municipios,
+                      distritos y secciones donde concentrar el siguiente esfuerzo.
+                    </p>
+                  </section>
+
+                </article>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-1">
+            <div class="kt-card">
+              <div class="kt-card-header">
+                <h3 class="kt-card-title">Datos clave</h3>
+              </div>
+              <div class="kt-card-content flex flex-col gap-4 p-5">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-secondary-foreground">Encuestas</span>
+                  <span class="text-sm text-mono num-total" id="dk_total">-</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-secondary-foreground">Partido líder</span>
+                  <span class="text-sm font-semibold text-mono" id="dk_top_partido">-</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-secondary-foreground">Líder Gubernatura</span>
+                  <span class="text-sm font-semibold text-mono" id="dk_top_gub">-</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-secondary-foreground">Ventaja Gubernatura</span>
+                  <span class="text-sm font-semibold text-mono num" id="dk_ventaja_gub">-</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-secondary-foreground">Municipios cubiertos</span>
+                  <span class="text-sm font-semibold text-mono num" id="dk_municipios">-</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-secondary-foreground">Secciones cubiertas</span>
+                  <span class="text-sm font-semibold text-mono num" id="dk_secciones">-</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-secondary-foreground">Teléfonos distintos</span>
+                  <span class="text-sm font-semibold text-mono num" id="dk_telefonos">-</span>
+                </div>
+              </div>
+              <div class="kt-card-footer flex flex-col gap-2">
+                <a class="kt-btn kt-btn-outline w-full" href="dashboard.html">Ver dashboard de KPIs</a>
+                <a class="kt-btn kt-btn-primary w-full" href="index.html">Ver mapa interactivo</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <!-- End of Content -->
+  </div>
+  <!-- End of Wrapper -->
+</div>
+
+<script src="assets/js/core.bundle.js"></script>
+<script src="assets/vendors/ktui/ktui.min.js"></script>
+<script src="data.js"></script>
+<script src="kpis.js"></script>
+<script>
+  var stats = calcularEstadisticas(datos);
+  var fmt = function (n) { return n.toLocaleString('es-MX'); };
+  var pct = function (v) { return stats.total ? (v / stats.total * 100).toFixed(1) : '0.0'; };
+  var poner = function (id, texto) { document.getElementById(id).textContent = texto; };
+  var primeroConDato = function (serie) {
+    return serie.filter(function (c) { return c.etiqueta !== '(sin dato)'; })[0] || { etiqueta: 'N/D', valor: 0 };
+  };
+
+  var partido = stats.preguntas['Preferencia Partido'];
+  var gub = stats.preguntas['Gubernatura'];
+
+  poner('n_total', fmt(stats.total));
+  poner('n_municipios', stats.municipios);
+  poner('n_df', stats.distritosFederales);
+  poner('n_dl', stats.distritosLocales);
+  poner('n_secciones', stats.secciones);
+  poner('n_colonias', stats.colonias);
+
+  poner('n_top_partido', partido.top.etiqueta);
+  poner('n_top_partido_valor', fmt(partido.top.valor));
+  poner('n_top_partido_pct', pct(partido.top.valor));
+  poner('n_segundo_partido', partido.segundo.etiqueta);
+  poner('n_segundo_partido_pct', pct(partido.segundo.valor));
+  poner('n_sin_partido_pct', pct(partido.sinRespuesta));
+  poner('n_top_partido_2', partido.top.etiqueta);
+
+  poner('n_top_gub', gub.top.etiqueta);
+  poner('n_top_gub_valor', fmt(gub.top.valor));
+  poner('n_top_gub_pct', pct(gub.top.valor));
+  poner('n_segundo_gub', gub.segundo.etiqueta);
+  poner('n_segundo_gub_pct', pct(gub.segundo.valor));
+  poner('n_ventaja_gub', pct(gub.top.valor - gub.segundo.valor));
+  poner('n_sin_gub_pct', pct(gub.sinRespuesta));
+  poner('n_top_gub_2', gub.top.etiqueta);
+
+  // Partido vs. candidato: de quienes prefieren cada partido, cuantos votarian por el candidato de ese partido
+  var frasesLealtad = Object.keys(PARTIDO_DE_CANDIDATO).map(function (candidato) {
+    var nombrePartido = PARTIDO_DE_CANDIDATO[candidato];
+    var simpatizantes = datos.filter(function (d) { return d['Preferencia Partido'] === nombrePartido; });
+    if (!simpatizantes.length) return null;
+    var leales = simpatizantes.filter(function (d) { return d['Gubernatura'] === candidato; }).length;
+    return 'de quienes prefieren a ' + nombrePartido + ', el ' + (leales / simpatizantes.length * 100).toFixed(1) +
+      '% votaría por ' + candidato + ' (' + fmt(leales) + ' de ' + fmt(simpatizantes.length) + ')';
+  }).filter(Boolean);
+  poner('n_lealtad', frasesLealtad.length
+    ? 'Al cruzar ambas preguntas: ' + frasesLealtad.join('; ') + '. La diferencia entre la preferencia por el ' +
+      'partido y el voto por su candidato indica cuánto arrastra (o pierde) cada candidatura respecto a su partido.'
+    : 'Aún no hay suficientes respuestas para cruzar la preferencia de partido con la intención de voto.');
+
+  var sexoTop = primeroConDato(stats.porSexo);
+  var edadTop = primeroConDato(stats.porRangoEdad);
+  poner('n_sexo_top', sexoTop.etiqueta);
+  poner('n_sexo_top_pct', pct(sexoTop.valor));
+  poner('n_edad_top', edadTop.etiqueta);
+  poner('n_edad_top_pct', pct(edadTop.valor));
+
+  var municipioTop = stats.porMunicipio[0] || { etiqueta: 'N/D', valor: 0 };
+  var coloniaTop = stats.porColonia[0] || { etiqueta: 'N/D', valor: 0 };
+  poner('n_municipio_top', municipioTop.etiqueta);
+  poner('n_municipio_top_valor', fmt(municipioTop.valor));
+  poner('n_colonia_top', coloniaTop.etiqueta);
+  poner('n_colonia_top_valor', fmt(coloniaTop.valor));
+
+  var fecha = function (f) { return f ? f.slice(0, 16) : 'N/D'; };
+  poner('n_fecha_inicio', fecha(stats.fechaInicio));
+  poner('n_fecha_fin', fecha(stats.fechaFin));
+  poner('n_telefonos', fmt(stats.telefonos));
+  poner('n_con_ubicacion', fmt(stats.conUbicacion));
+  poner('n_con_ubicacion_pct', pct(stats.conUbicacion));
+  poner('n_aproximada', fmt(stats.ubicacionAproximada));
+
+  poner('dk_total', fmt(stats.total));
+  poner('dk_top_partido', partido.top.etiqueta + ' (' + pct(partido.top.valor) + '%)');
+  poner('dk_top_gub', gub.top.etiqueta + ' (' + pct(gub.top.valor) + '%)');
+  poner('dk_ventaja_gub', pct(gub.top.valor - gub.segundo.valor) + ' pts');
+  poner('dk_municipios', stats.municipios);
+  poner('dk_secciones', fmt(stats.secciones));
+  poner('dk_telefonos', fmt(stats.telefonos));
+</script>
+</body>
+</html>

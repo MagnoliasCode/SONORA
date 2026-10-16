@@ -1,0 +1,45 @@
+# Actualizar datos de la encuesta Sonora (contexto para Claude)
+
+## Cómo usar este archivo
+Cuando reemplaces "EncuestaSonora.xlsx" (en esta carpeta) con datos nuevos, pega en Claude Code:
+
+    Lee "Actualizar datos encuesta.txt" y ejecuta la actualización de datos.
+
+---------------------------------------------------------------------------------------------
+
+## Instrucciones para Claude
+
+### Objetivo
+Regenerar los datos del sitio a partir de "EncuestaSonora.xlsx" y verificar que las páginas sigan
+funcionando. El sitio es estático (GitHub Pages) y se delimita a las secciones del shapefile de
+Sonora (carpeta SON del proyecto original).
+
+### Flujo de datos
+    ../SON/SECCION.shp --(python convertir_secciones.py)--> secciones_son.js (var secciones = ...)
+    EncuestaSonora.xlsx --(node actualizar_datos.js)------> data.js (var datos = [...])
+                                                       \--> EncuestaSonora.csv (descarga del menú)
+    data.js + kpis.js + secciones_son.js --> index.html (mapa), dashboard.html (+ dashboard.js), resumen.html
+
+- data.js, el CSV y secciones_son.js se generan solos: NUNCA editarlos a mano.
+- secciones_son.js solo se regenera si cambia el shapefile (requiere Python con pyproj y shapely).
+- Delimitación (en actualizar_datos.js): se conserva el registro si su punto cae dentro de alguna
+  sección; si no, pero su sección existe en la capa, se mueve al centro de su sección (campo
+  "Ubicacion" = "Aproximada (centro de la seccion)"); si tampoco, se omite.
+- No se publican CURP, clave de elector (Cve), fecha de nacimiento ni entidad (MAPEO_COLUMNAS con
+  campo: null).
+- Los nombres de municipio de la capa se toman de la encuesta (el shapefile solo trae la clave);
+  los municipios sin encuestas aparecen como "MUNICIPIO <clave>".
+
+### Preguntas
+    1 ...                         -> Preferencia Partido
+    2 ... / "...Gubernatura..."   -> Gubernatura
+Opciones, orden y colores: OPCIONES_PREGUNTA / COLORES_OPCIONES / PARTIDO_DE_CANDIDATO en kpis.js.
+Variantes de escritura: objeto RESPUESTAS en actualizar_datos.js. "-" = sin respuesta.
+
+### Pasos
+1. Desde esta carpeta: node actualizar_datos.js
+2. Revisar avisos (registros omitidos o reubicados, columnas no encontradas, columnas nuevas sin
+   mapeo) y valores nuevos en las preguntas; ajustar RESPUESTAS / kpis.js si hace falta.
+3. Abrir index.html, dashboard.html y resumen.html para verificar.
+4. NO hacer commit ni push salvo que el usuario lo pida. data.js y el CSV contienen datos
+   personales (nombres, teléfonos, direcciones).

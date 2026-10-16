@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html class="h-full" data-kt-theme="true" data-kt-theme-mode="light" lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard KPIs - Encuesta Sonora</title>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+<link href="assets/media/app/favicon.ico" rel="shortcut icon">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="assets/vendors/apexcharts/apexcharts.css" rel="stylesheet">
+<link href="assets/vendors/keenicons/styles.bundle.css" rel="stylesheet">
+<link href="assets/css/styles.css" rel="stylesheet">
+<style>
+  @font-face {
+    font-family: 'TitilliumWeb';
+    src: url('TitilliumWeb-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  /* Numeros del proyecto: fuente y tamaño unificados; los totales llevan negritas */
+  .num { font-family: 'TitilliumWeb', sans-serif; font-size: 13px; }
+  .num-total { font-family: 'TitilliumWeb', sans-serif; font-size: 13px; font-weight: 700; }
+  /* Utilidades puntuales no incluidas en el bundle estatico de Tailwind (styles.css) */
+  .kpi-row { display: flex; flex-direction: column; }
+  .kpi-row > div { border-bottom: 1px solid var(--border); }
+  .kpi-row > div:last-child { border-bottom: none; }
+  @media (min-width: 1024px) {
+    .kpi-row { flex-direction: row; }
+    .kpi-row > div { border-bottom: none; border-inline-end: 1px solid var(--border); }
+    .kpi-row > div:last-child { border-inline-end: none; }
+  }
+  .filtro-menu { width: 16rem; }
+  .filtro-lista { max-height: 20rem; overflow-y: auto; }
+  /* Leyendas de ApexCharts: una sola fila, centradas, debajo de las barras */
+  .apexcharts-legend {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: center !important;
+    width: 100% !important;
+  }
+  /* Etiquetas del eje de categorias: clicables para ocultar/mostrar esa barra */
+  .apexcharts-yaxis-texts-g .apexcharts-yaxis-label,
+  .apexcharts-xaxis-texts-g .apexcharts-xaxis-label {
+    cursor: pointer;
+  }
+</style>
+</head>
+<body class="antialiased flex h-full text-base text-foreground bg-background demo1 kt-sidebar-fixed kt-header-fixed">
+<script>
+  document.documentElement.classList.add('light');
+</script>
+
+<div class="flex grow">
+  <!-- Sidebar -->
+  <div class="kt-sidebar bg-background border-e border-e-border fixed top-0 bottom-0 z-20 hidden lg:flex flex-col items-stretch shrink-0 [--kt-drawer-enable:true] lg:[--kt-drawer-enable:false]" data-kt-drawer="true" data-kt-drawer-class="kt-drawer kt-drawer-start top-0 bottom-0" id="sidebar">
+    <div class="kt-sidebar-header hidden lg:flex items-center relative justify-between px-3 lg:px-6 shrink-0" id="sidebar_header">
+      <div class="kt-sidebar-logo min-w-0 flex items-center gap-2">
+        <i class="ki-filled ki-chart-simple text-xl text-primary"></i>
+        <span class="font-semibold text-sm text-mono truncate">Encuesta Sonora</span>
+      </div>
+      <button class="kt-btn kt-btn-outline kt-btn-icon size-[30px] absolute start-full top-2/4 z-40 -translate-x-2/4 -translate-y-2/4" data-kt-toggle="body" data-kt-toggle-class="kt-sidebar-collapse" id="sidebar_toggle">
+        <i class="ki-filled ki-black-left-line kt-toggle-active:rotate-180 transition-all duration-300"></i>
+      </button>
+    </div>
+    <div class="kt-sidebar-content flex grow shrink-0 py-5 pe-2" id="sidebar_content">
+      <div class="kt-scrollable-y-hover grow shrink-0 flex ps-2 lg:ps-5 pe-1 lg:pe-3" data-kt-scrollable="true" data-kt-scrollable-dependencies="#sidebar_header" data-kt-scrollable-height="auto" data-kt-scrollable-offset="0px" data-kt-scrollable-wrappers="#sidebar_content" id="sidebar_scrollable">
+        <div class="kt-menu flex flex-col grow gap-1" data-kt-menu="true" id="sidebar_menu">
+          <div class="kt-menu-item">
+            <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[10px] ps-[10px] pe-[10px] py-[8px]" href="index.html">
+              <span class="kt-menu-icon items-start text-muted-foreground w-[20px]"><i class="ki-filled ki-map text-lg"></i></span>
+              <span class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold">Mapa interactivo</span>
+            </a>
+          </div>
+          <div class="kt-menu-item active">
+            <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[10px] ps-[10px] pe-[10px] py-[8px]" href="dashboard.html">
+              <span class="kt-menu-icon items-start text-muted-foreground w-[20px]"><i class="ki-filled ki-chart-simple text-lg"></i></span>
+              <span class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold">Dashboard KPIs</span>
+            </a>
+          </div>
+          <div class="kt-menu-item">
+            <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[10px] ps-[10px] pe-[10px] py-[8px]" href="resumen.html">
+              <span class="kt-menu-icon items-start text-muted-foreground w-[20px]"><i class="ki-filled ki-book-open text-lg"></i></span>
+              <span class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold">Resumen y hallazgos</span>
+            </a>
+          </div>
+          <div class="kt-menu-item">
+            <a class="kt-menu-link border border-transparent items-center grow hover:bg-accent/60 hover:rounded-lg gap-[10px] ps-[10px] pe-[10px] py-[8px]" href="EncuestaSonora.csv" download="EncuestaSonora.csv">
+              <span class="kt-menu-icon items-start text-muted-foreground w-[20px]"><i class="ki-filled ki-file-down text-lg"></i></span>
+              <span class="kt-menu-title text-sm font-medium text-foreground">Descargar datos (CSV)</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- End of Sidebar -->
+
+  <!-- Wrapper -->
+  <div class="kt-wrapper flex grow flex-col">
+    <!-- Header -->
+    <header class="kt-header fixed top-0 z-10 start-0 end-0 flex items-stretch shrink-0 bg-background" data-kt-sticky="true" data-kt-sticky-class="border-b border-border" data-kt-sticky-name="header" id="header">
+      <div class="kt-container-fixed flex justify-between items-stretch lg:gap-4" id="headerContainer">
+        <div class="flex gap-2.5 lg:hidden items-center -ms-1">
+          <button class="kt-btn kt-btn-icon kt-btn-ghost" data-kt-drawer-toggle="#sidebar">
+            <i class="ki-filled ki-menu"></i>
+          </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <i class="ki-filled ki-chart-simple text-lg text-primary"></i>
+          <span class="text-sm font-medium text-mono">Dashboard KPIs</span>
+        </div>
+        <div class="flex items-center gap-2.5"></div>
+      </div>
+    </header>
+    <!-- End of Header -->
+
+    <!-- Content -->
+    <main class="grow pt-5" id="content" role="content">
+
+      <!-- ======================= SECCION 1: Resumen general del estado ======================= -->
+      <div class="kt-container-fixed">
+        <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+          <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Resumen general — Sonora</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">Resultados de las 2 preguntas de la encuesta — <span class="num" id="s1_periodo">-</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kt-container-fixed">
+        <div class="grid gap-5 lg:gap-7.5">
+
+          <!-- KPI row con 4 lineas divisorias -->
+          <div class="kt-card">
+            <div class="kt-card-content kpi-row p-0">
+              <div class="flex-1 flex flex-col gap-1 p-5">
+                <span class="text-xs font-medium text-secondary-foreground">Encuestas</span>
+                <span class="text-2xl text-mono num-total" id="s1_total">-</span>
+              </div>
+              <div class="flex-1 flex flex-col gap-1 p-5">
+                <span class="text-xs font-medium text-secondary-foreground">Partido líder</span>
+                <span class="text-2xl font-semibold text-mono" id="s1_partido">-</span>
+                <span class="text-xs text-secondary-foreground num" id="s1_partido_pct">-</span>
+              </div>
+              <div class="flex-1 flex flex-col gap-1 p-5">
+                <span class="text-xs font-medium text-secondary-foreground">Líder Gubernatura</span>
+                <span class="text-2xl font-semibold text-mono" id="s1_gub">-</span>
+                <span class="text-xs text-secondary-foreground num" id="s1_gub_pct">-</span>
+              </div>
+              <div class="flex-1 flex flex-col gap-1 p-5">
+                <span class="text-xs font-medium text-secondary-foreground">Ventaja Gubernatura</span>
+                <span class="text-2xl text-mono num" id="s1_ventaja">-</span>
+                <span class="text-xs text-secondary-foreground" id="s1_ventaja_sub">-</span>
+              </div>
+              <div class="flex-1 flex flex-col gap-1 p-5">
+                <span class="text-xs font-medium text-secondary-foreground">Sin respuesta Gubernatura</span>
+                <span class="text-2xl text-mono num" id="s1_sin">-</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2 graficos: una pregunta cada uno -->
+          <div class="grid lg:grid-cols-2 gap-5 lg:gap-7.5 items-stretch">
+            <div class="kt-card h-full">
+              <div class="kt-card-header flex-col items-start justify-center gap-1 py-4"><h3 class="kt-card-title">1. Preferencia de partido</h3><span class="text-xs text-secondary-foreground num" id="s1_chart_q1_base"></span></div>
+              <div class="kt-card-content"><div id="s1_chart_q1"></div></div>
+            </div>
+            <div class="kt-card h-full">
+              <div class="kt-card-header flex-col items-start justify-center gap-1 py-4"><h3 class="kt-card-title">2. Intención de voto — Gubernatura</h3><span class="text-xs text-secondary-foreground num" id="s1_chart_q2_base"></span></div>
+              <div class="kt-card-content"><div id="s1_chart_q2"></div></div>
+            </div>
+          </div>
+
+          <!-- Cruce de las 2 preguntas -->
+          <div class="kt-card">
+            <div class="kt-card-header flex-col items-start justify-center gap-1 py-4"><h3 class="kt-card-title">Intención de voto a Gubernatura según partido preferido</h3><span class="text-xs text-secondary-foreground">Solo quienes indicaron candidato</span></div>
+            <div class="kt-card-content"><div id="s1_chart_cruce"></div></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ======================= SECCION 2: Comparativo por region ======================= -->
+      <div class="kt-container-fixed pt-8">
+        <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+          <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Comparativo por región</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">Resto del Estado vs. Hermosillo vs. Cajeme — % de las encuestas de cada región</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kt-container-fixed">
+        <div class="grid lg:grid-cols-2 gap-5 lg:gap-7.5 items-stretch">
+          <div class="kt-card h-full">
+            <div class="kt-card-header"><h3 class="kt-card-title">1. Preferencia de partido</h3></div>
+            <div class="kt-card-content"><div id="s2_chart_q1"></div></div>
+          </div>
+          <div class="kt-card h-full">
+            <div class="kt-card-header"><h3 class="kt-card-title">2. Intención de voto — Gubernatura</h3></div>
+            <div class="kt-card-content"><div id="s2_chart_q2"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================= SECCION 3: Explorador por Distrito Local / Federal / Municipio ======================= -->
+      <div class="kt-container-fixed pt-8">
+        <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+          <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Explorador por distrito y municipio</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">Selecciona uno o varios valores para recalcular los KPIs y gráficos</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kt-container-fixed pb-8">
+        <div class="grid gap-5 lg:gap-7.5">
+
+          <!-- Filtros: 3 dropdowns con checkboxes -->
+          <div class="kt-card">
+            <div class="kt-card-content flex flex-wrap items-center gap-3 p-5">
+              <span class="text-xs font-semibold text-secondary-foreground me-1">Filtrar por:</span>
+
+              <div class="relative inline-flex" data-kt-dropdown="true" data-kt-dropdown-trigger="click">
+                <button type="button" class="kt-btn kt-btn-outline kt-btn-sm" data-kt-dropdown-toggle="true">
+                  Distrito Local
+                  <span class="kt-badge kt-badge-sm kt-badge-primary kt-badge-outline" id="s3_badge_dl">Todos</span>
+                  <i class="ki-filled ki-down text-xs"></i>
+                </button>
+                <div class="kt-dropdown-menu hidden filtro-menu flex-col bg-background border border-border rounded-lg shadow-md p-3 gap-2" data-kt-dropdown-menu="true">
+                  <label class="flex items-center gap-2 pb-2 mb-1 border-b border-border">
+                    <input class="kt-checkbox kt-checkbox-sm" type="checkbox" id="s3_dl_todos">
+                    <span class="text-xs font-semibold text-mono">Seleccionar todo</span>
+                  </label>
+                  <div class="flex flex-col gap-1 filtro-lista" id="s3_dl_lista"></div>
+                </div>
+              </div>
+
+              <div class="relative inline-flex" data-kt-dropdown="true" data-kt-dropdown-trigger="click">
+                <button type="button" class="kt-btn kt-btn-outline kt-btn-sm" data-kt-dropdown-toggle="true">
+                  Distrito Federal
+                  <span class="kt-badge kt-badge-sm kt-badge-primary kt-badge-outline" id="s3_badge_df">Todos</span>
+                  <i class="ki-filled ki-down text-xs"></i>
+                </button>
+                <div class="kt-dropdown-menu hidden filtro-menu flex-col bg-background border border-border rounded-lg shadow-md p-3 gap-2" data-kt-dropdown-menu="true">
+                  <label class="flex items-center gap-2 pb-2 mb-1 border-b border-border">
+                    <input class="kt-checkbox kt-checkbox-sm" type="checkbox" id="s3_df_todos">
+                    <span class="text-xs font-semibold text-mono">Seleccionar todo</span>
+                  </label>
+                  <div class="flex flex-col gap-1 filtro-lista" id="s3_df_lista"></div>
+                </div>
+              </div>
+
+              <div class="relative inline-flex" data-kt-dropdown="true" data-kt-dropdown-trigger="click">
+                <button type="button" class="kt-btn kt-btn-outline kt-btn-sm" data-kt-dropdown-toggle="true">
+                  Municipio
+                  <span class="kt-badge kt-badge-sm kt-badge-primary kt-badge-outline" id="s3_badge_mun">Todos</span>
+                  <i class="ki-filled ki-down text-xs"></i>
+                </button>
+                <div class="kt-dropdown-menu hidden filtro-menu flex-col bg-background border border-border rounded-lg shadow-md p-3 gap-2" data-kt-dropdown-menu="true">
+                  <label class="flex items-center gap-2 pb-2 mb-1 border-b border-border">
+                    <input class="kt-checkbox kt-checkbox-sm" type="checkbox" id="s3_mun_todos">
+                    <span class="text-xs font-semibold text-mono">Seleccionar todo</span>
+                  </label>
+                  <div class="flex flex-col gap-1 filtro-lista" id="s3_mun_lista"></div>
+                </div>
+              </div>
+
+              <button type="button" class="kt-btn kt-btn-outline kt-btn-sm ms-auto" id="s3_reset">Quitar filtros</button>
+            </div>
+          </div>
+
+          <!-- KPI row con 4 lineas divisorias -->
+          <div class="kt-card">
+            <div class="kt-card-content kpi-row p-0">
+              <div class="flex-1 flex flex-col gap-1 p-5">
+                <span class="text-xs font-medium text-secondary-foreground">Encuestas</span>
+                <span class="text-2xl text-mono num-total" id="s3_total">-</span>
+              </div>
+              <div class="flex-1 flex flex-col gap-1 p-5">
+                <span class="text-xs font-medium text-secondary-foreground">Partido líder</span>
+                <span class="text-2xl font-semibold text-mono" id="s3_partido">-</span>
+                <span class="text-xs text-secondary-foreground num" id="s3_partido_pct">-</span>
+              </div>
+              <div class="flex-1 flex flex-col gap-1 p-5">
+                <span class="text-xs font-medium text-secondary-foreground">Líder Gubernatura</span>
+                <span class="text-2xl font-semibold text-mono" id="s3_gub">-</span>
+                <span class="text-xs text-secondary-foreground num" id="s3_gub_pct">-</span>
+              </div>
+              <div class="flex-1 flex flex-col gap-1 p-5">
+                <span class="text-xs font-medium text-secondary-foreground">Ventaja Gubernatura</span>
+                <span class="text-2xl text-mono num" id="s3_ventaja">-</span>
+                <span class="text-xs text-secondary-foreground" id="s3_ventaja_sub">-</span>
+              </div>
+              <div class="flex-1 flex flex-col gap-1 p-5">
+                <span class="text-xs font-medium text-secondary-foreground">Sin respuesta Gubernatura</span>
+                <span class="text-2xl text-mono num" id="s3_sin">-</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2 graficos recalculados segun filtros -->
+          <div class="grid lg:grid-cols-2 gap-5 lg:gap-7.5 items-stretch">
+            <div class="kt-card h-full">
+              <div class="kt-card-header flex-col items-start justify-center gap-1 py-4"><h3 class="kt-card-title">1. Preferencia de partido</h3><span class="text-xs text-secondary-foreground num" id="s3_chart_q1_base"></span></div>
+              <div class="kt-card-content"><div id="s3_chart_q1"></div></div>
+            </div>
+            <div class="kt-card h-full">
+              <div class="kt-card-header flex-col items-start justify-center gap-1 py-4"><h3 class="kt-card-title">2. Intención de voto — Gubernatura</h3><span class="text-xs text-secondary-foreground num" id="s3_chart_q2_base"></span></div>
+              <div class="kt-card-content"><div id="s3_chart_q2"></div></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+    <!-- End of Content -->
+  </div>
+  <!-- End of Wrapper -->
+</div>
+
+<script src="assets/js/core.bundle.js"></script>
+<script src="assets/vendors/ktui/ktui.min.js"></script>
+<script src="assets/vendors/apexcharts/apexcharts.min.js"></script>
+<script src="data.js"></script>
+<script src="kpis.js"></script>
+<script src="dashboard.js"></script>
+<script>
+  // ---------- Seccion 1: resumen general ----------
+  var statsEstado = calcularEstadisticas(datos);
+  document.getElementById('s1_periodo').textContent = statsEstado.fechaInicio
+    ? 'levantamiento del ' + statsEstado.fechaInicio.slice(0, 16) + ' al ' + statsEstado.fechaFin.slice(0, 16)
+    : 'sin fechas registradas';
+  pintarKpis('s1', datos);
+  pintarPreguntas('s1', datos);
+  graficoCruce('#s1_chart_cruce', datos, 'Preferencia Partido', 'Gubernatura', 300);
+
+  // ---------- Seccion 2: comparativo por region ----------
+  var grupos = gruposRegion();
+  PREGUNTAS.forEach(function (p, i) {
+    graficoGrupos('#s2_chart_q' + (i + 1), combinarGrupos(p.campo, grupos), grupos);
+  });
+
+  // ---------- Seccion 3: explorador con filtros ----------
+  var s3Filtro = { dl: new Set(), df: new Set(), mun: new Set() };
+  var opcionesFiltro = {
+    distritosLocales: valoresUnicosOrdenados('Distrito Local', true),
+    distritosFederales: valoresUnicosOrdenados('Distrito Federal', true),
+    municipios: valoresUnicosOrdenados('Nombre Municipio', false)
+  };
+
+  function construirListaCheckbox(contenedorId, todosId, badgeId, valores, filtroSet, etiquetaTodos) {
+    var contenedor = document.getElementById(contenedorId);
+    var chkTodos = document.getElementById(todosId);
+    var badge = document.getElementById(badgeId);
+
+    valores.forEach(function (v) {
+      var label = document.createElement('label');
+      label.className = 'flex items-center gap-2';
+      var chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.className = 'kt-checkbox kt-checkbox-sm';
+      chk.value = v;
+      var span = document.createElement('span');
+      span.className = 'text-xs text-foreground';
+      span.textContent = v;
+      label.appendChild(chk);
+      label.appendChild(span);
+      contenedor.appendChild(label);
+
+      chk.addEventListener('change', function () {
+        if (chk.checked) filtroSet.add(v); else filtroSet.delete(v);
+        var checks = contenedor.querySelectorAll('input[type=checkbox]');
+        var marcados = contenedor.querySelectorAll('input[type=checkbox]:checked');
+        chkTodos.checked = marcados.length === checks.length;
+        chkTodos.indeterminate = marcados.length > 0 && marcados.length < checks.length;
+        actualizarBadge(badge, filtroSet, etiquetaTodos);
+        recalcularSeccion3();
+      });
+    });
+
+    chkTodos.addEventListener('change', function () {
+      var checks = contenedor.querySelectorAll('input[type=checkbox]');
+      checks.forEach(function (c) { c.checked = chkTodos.checked; });
+      filtroSet.clear();
+      if (chkTodos.checked) valores.forEach(function (v) { filtroSet.add(v); });
+      chkTodos.indeterminate = false;
+      actualizarBadge(badge, filtroSet, etiquetaTodos);
+      recalcularSeccion3();
+    });
+  }
+
+  function actualizarBadge(badge, filtroSet, etiquetaTodos) {
+    if (filtroSet.size === 0) {
+      badge.textContent = 'Todos';
+    } else {
+      badge.textContent = filtroSet.size + ' de ' + etiquetaTodos;
+    }
+  }
+
+  construirListaCheckbox('s3_dl_lista', 's3_dl_todos', 's3_badge_dl', opcionesFiltro.distritosLocales, s3Filtro.dl, opcionesFiltro.distritosLocales.length);
+  construirListaCheckbox('s3_df_lista', 's3_df_todos', 's3_badge_df', opcionesFiltro.distritosFederales, s3Filtro.df, opcionesFiltro.distritosFederales.length);
+  construirListaCheckbox('s3_mun_lista', 's3_mun_todos', 's3_badge_mun', opcionesFiltro.municipios, s3Filtro.mun, opcionesFiltro.municipios.length);
+
+  document.getElementById('s3_reset').addEventListener('click', function () {
+    ['s3_dl_lista', 's3_df_lista', 's3_mun_lista'].forEach(function (id) {
+      document.getElementById(id).querySelectorAll('input[type=checkbox]').forEach(function (c) { c.checked = false; });
+    });
+    ['s3_dl_todos', 's3_df_todos', 's3_mun_todos'].forEach(function (id) {
+      document.getElementById(id).checked = false;
+      document.getElementById(id).indeterminate = false;
+    });
+    s3Filtro.dl.clear();
+    s3Filtro.df.clear();
+    s3Filtro.mun.clear();
+    actualizarBadge(document.getElementById('s3_badge_dl'), s3Filtro.dl, opcionesFiltro.distritosLocales.length);
+    actualizarBadge(document.getElementById('s3_badge_df'), s3Filtro.df, opcionesFiltro.distritosFederales.length);
+    actualizarBadge(document.getElementById('s3_badge_mun'), s3Filtro.mun, opcionesFiltro.municipios.length);
+    recalcularSeccion3();
+  });
+
+  function recalcularSeccion3() {
+    var filtrados = filtrarDatos(s3Filtro);
+    pintarKpis('s3', filtrados);
+    pintarPreguntas('s3', filtrados);
+  }
+
+  recalcularSeccion3();
+</script>
+</body>
+</html>
